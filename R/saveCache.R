@@ -54,7 +54,7 @@
 # @keyword "programming"
 # @keyword "IO"
 #*/#########################################################################
-setMethodS3("saveCache", "default", function(object, key=NULL, sources=NULL, suffix=".Rcache", comment=NULL, pathname=NULL, dirs=NULL, compress=NULL, ...) {
+setMethodS3("saveCache", "default", function(object, key=NULL, sources=NULL, suffix=".Rcache", comment=NULL, pathname=NULL, dirs=NULL, compress=NULL, shallow=FALSE, ...) {
   # Look up base::save() once; '::' adds overhead
   base_save <- base::save
 
@@ -110,6 +110,9 @@ setMethodS3("saveCache", "default", function(object, key=NULL, sources=NULL, suf
   timestamp <- Sys.time()
 
   tryCatch({
+    if (shallow) {
+      file.create(pathname)
+    } else {
     # Save 'identifier'
     writeChar(con=fh, identifier, nchars=64L)
   
@@ -125,6 +128,7 @@ setMethodS3("saveCache", "default", function(object, key=NULL, sources=NULL, suf
   
     # Save 'object'
     base_save(file=fh, object, compress=compress, ...)
+    }
   }, error = function(ex) {
     msg <- conditionMessage(ex)
     throw(sprintf("Failed to save to cache (%s). The reason was: %s",
